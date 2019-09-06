@@ -102,6 +102,9 @@
 - name: Convert logical volume to a cache pool LV
   command: >
     lvconvert -y --type cache-pool
+       {% if item.0.chunksize is defined and item.0.chunksize is not none %}
+        --chunksize {{ item.0.chunksize }}
+       {% endif %}
        {% if item.0.cachemetalvname is defined %}
         --poolmetadata {{ item.0.vgname }}/{{ item.0.cachemetalvname }}
        {% else %}
@@ -116,7 +119,11 @@
 # Run lvs -a -o +devices to see the cache settings
 - name: Convert an existing logical volume to a cache LV
   command: >
-    lvconvert -y --type cache --cachepool {{ item.0.vgname }}/{{ item.0.cachelvname }}
+    lvconvert -y --type cache
+    {% if item.0.chunksize is defined and item.0.chunksize is not none %}
+     --chunksize {{ item.0.chunksize }}
+    {% endif %}
+    --cachepool {{ item.0.vgname }}/{{ item.0.cachelvname }}
     {{ item.0.vgname }}/{{ item.0.cachetarget | default(item.0.cachethinpoolname) }}
   loop: "{{ ((gluster_infra_cache_vars is not none and gluster_infra_cache_vars) or default([])) | zip(((datapoolcache_attrs is not none and datapoolcache_attrs.results) or default([]))) | list }}"
   loop_control:
